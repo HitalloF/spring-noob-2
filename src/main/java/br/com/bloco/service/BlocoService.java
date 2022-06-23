@@ -4,6 +4,7 @@ import br.com.bloco.entity.Bloco;
 import br.com.bloco.repository.BlocoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -25,20 +26,34 @@ public class BlocoService {
         return this.blocoRepository.save(bloco);
     }
 
-    public Optional<Bloco> getForId(Long id){
-        return this.blocoRepository.findById(id);
+    public ResponseEntity<Bloco>  getByID(Long id){
+        Optional<Bloco> folha = this.blocoRepository.findById(id);
+        if(folha.isPresent())
+            return new ResponseEntity<Bloco>(folha.get(), HttpStatus.OK);
+        else
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public void deleteFolha(Long id){
-        this.blocoRepository.deleteById(id);
+    public ResponseEntity<Bloco> deleteBloco(Long id){
+        Optional<Bloco> pessoa = this.blocoRepository.findById(id);
+        if(pessoa.isPresent()){
+            this.blocoRepository.delete(pessoa.get());
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<Bloco> changeFolha(Bloco bloco, Long id){
-        return this.blocoRepository.findById(id).map(change ->{
-            change.setName(bloco.getName());
-            Bloco updated = this.blocoRepository.save(change);
-            return ResponseEntity.ok().body(updated);
-            }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Bloco> changeFolha(Bloco newBloco, Long id){
+         Optional<Bloco> oldBloco = this.blocoRepository.findById(id);
+         if(oldBloco.isPresent()){
+             Bloco bloco = oldBloco.get();
+             bloco.setName(newBloco.getName());
+             this.blocoRepository.save(bloco);
+             return new ResponseEntity<Bloco>(bloco, HttpStatus.OK);
+         }
+         else
+             return  new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 }
